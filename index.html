@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黒い CsPbI₃ 安定化戦略</title>
+<meta name="description" content="有機カチオンで黒い CsPbI3 を安定化する計算戦略（MLIP＋DFT）の進め方とここまでの結果">
+<style>
+:root{
+  --bg:#f7f6f2; --fg:#1d1d1f; --muted:#5f6368; --card:#ffffff; --line:#d9d6cf;
+  --black:#24242a; --yellow:#e2b33c; --accent:#2f6fde; --good:#2e8b57; --bad:#c94141; --soft:#eef2fb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141418; --fg:#ececf1; --muted:#a3a7b0; --card:#1e1e24; --line:#34343c;
+    --black:#55555f; --yellow:#e8bf55; --accent:#6f9cff; --good:#5cc08a; --bad:#ff7a7a; --soft:#22283a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141418; --fg:#ececf1; --muted:#a3a7b0; --card:#1e1e24; --line:#34343c;
+  --black:#55555f; --yellow:#e8bf55; --accent:#6f9cff; --good:#5cc08a; --bad:#ff7a7a; --soft:#22283a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;line-height:1.8;font-size:16px}
+.wrap{max-width:920px;margin:0 auto;padding:0 16px}
+header.hero{min-height:88vh;display:flex;align-items:center;position:relative;overflow:hidden}
+.hero h1{font-size:clamp(28px,5vw,46px);line-height:1.3;margin:0 0 12px}
+.hero p{color:var(--muted);max-width:620px;margin:0}
+.tag{display:inline-block;font-size:13px;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:2px 12px;margin-bottom:16px}
+#lattice{position:absolute;inset:0;z-index:0;opacity:.18;pointer-events:none}
+.hero .wrap{position:relative;z-index:1}
+nav.toc{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);z-index:5}
+nav.toc .wrap{display:flex;gap:18px;overflow-x:auto;white-space:nowrap;padding:10px 16px;font-size:14px}
+nav.toc a{color:var(--muted);text-decoration:none}
+nav.toc a:hover{color:var(--fg)}
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+section h2{font-size:clamp(22px,3.4vw,30px);margin:0 0 6px}
+.kicker{color:var(--accent);font-size:13px;letter-spacing:.08em}
+.lead{color:var(--muted);margin-top:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin:20px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:680px){.grid2{grid-template-columns:1fr}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+.reveal.on{opacity:1;transform:none}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+td.pos{color:var(--good);font-weight:600} td.neg{color:var(--bad);font-weight:600}
+.note{font-size:13px;color:var(--muted)}
+svg text{font-family:inherit}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer}
+.btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{position:relative;padding:14px 0 14px 48px;border-left:2px solid var(--line);margin-left:16px}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:-17px;top:12px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700}
+.steps li.done::before{background:var(--good)}
+.steps li.now::before{background:var(--yellow);color:#222;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--yellow) 70%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+.bar{transition:width 1.2s cubic-bezier(.2,.8,.2,1),height 1.2s cubic-bezier(.2,.8,.2,1),y 1.2s cubic-bezier(.2,.8,.2,1)}
+footer{padding:40px 0;color:var(--muted);font-size:13px}
+.pill{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12px;margin-right:6px}
+.pill.g{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.pill.y{background:color-mix(in srgb,var(--yellow) 25%,transparent);color:color-mix(in srgb,var(--yellow) 70%,var(--fg))}
+.pill.b{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+#themeBtn{position:fixed;right:14px;bottom:14px;z-index:9}
+</style>
+</head>
+<body>
+<button class="btn" id="themeBtn" aria-label="表示の明暗を切り替える">◐</button>
+
+<header class="hero">
+  <canvas id="lattice"></canvas>
+  <div class="wrap">
+    <span class="tag">2026-11-18 時点の進め方</span>
+    <h1>有機カチオンで<br>黒い CsPbI₃ を守る</h1>
+    <p>CsPbI₃ は、太陽電池に使える黒い相（γ・α）から、使えない黄色い相（δ）へ変わりやすい。表面に置く有機カチオンで黒い相を安定にできるかを、機械学習ポテンシャル（MLIP）で広く探し、DFT で確かめる。</p>
+  </div>
+</header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#metric">1. 指標</a><a href="#repro">2. 論文の再現</a><a href="#check">3. MLIP の検証</a><a href="#screen">4. 候補探索</a><a href="#insight">5. わかったこと</a><a href="#next">6. これから</a>
+</div></nav>
+
+<section id="metric"><div class="wrap">
+  <div class="kicker">STEP 1</div>
+  <h2>何で「黒い相が有利」と判定するか</h2>
+  <p class="lead">表面のエネルギー（E_SF）の差で比べる。黒い相と δ の両方の表面に同じカチオンを置き、どちらの表面がより安定になるかを見る。</p>
+  <div class="card reveal">
+    <svg viewBox="0 0 640 260" width="100%" role="img" aria-label="Δγ の考え方">
+      <line x1="60" y1="220" x2="600" y2="220" stroke="var(--line)"/>
+      <text x="40" y="24" fill="var(--muted)" font-size="13">E_SF（低いほど表面が安定）</text>
+      <g id="mCs">
+        <rect class="bar" x="110" y="150" width="70" height="70" fill="var(--black)" rx="4"/>
+        <rect class="bar" x="190" y="110" width="70" height="110" fill="var(--yellow)" rx="4"/>
+        <text x="185" y="245" text-anchor="middle" fill="var(--fg)" font-size="14">表面処理なし（Cs）</text>
+      </g>
+      <g>
+        <rect id="xb" class="bar" x="380" y="150" width="70" height="70" fill="var(--black)" rx="4"/>
+        <rect id="xd" class="bar" x="460" y="110" width="70" height="110" fill="var(--yellow)" rx="4"/>
+        <text x="455" y="245" text-anchor="middle" fill="var(--fg)" font-size="14">カチオン X</text>
+      </g>
+      <g id="arrows" opacity="0" style="transition:opacity .8s">
+        <line x1="270" y1="150" x2="270" y2="110" stroke="var(--fg)" marker-end="url(#ah)" marker-start="url(#ah)"/>
+        <text x="278" y="135" fill="var(--fg)" font-size="13">Δγ(Cs)</text>
+        <line id="ax" x1="540" y1="150" x2="540" y2="110" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah2)" marker-start="url(#ah2)"/>
+        <text id="axt" x="548" y="135" fill="var(--accent)" font-size="13">Δγ(X)</text>
+      </g>
+      <defs>
+        <marker id="ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="var(--fg)"/></marker>
+        <marker id="ah2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="var(--accent)"/></marker>
+      </defs>
+      <rect x="80" y="40" width="12" height="12" fill="var(--black)" rx="2"/><text x="98" y="51" font-size="13" fill="var(--fg)">黒い相（γ）</text>
+      <rect x="190" y="40" width="12" height="12" fill="var(--yellow)" rx="2"/><text x="208" y="51" font-size="13" fill="var(--fg)">δ（黄色い相）</text>
+    </svg>
+    <p>Δγ = E_SF(δ) − E_SF(黒い相)。主指標は <b>ΔΔγ = Δγ(X) − Δγ(Cs)</b> で、正ならカチオン X は表面処理なしより黒い相を有利にする。あわせて、μ（化学ポテンシャル）の取り方によらない <b>Δr</b>（1 分子あたりの置き換えエネルギーの差）も見る。</p>
+  </div>
+</div></section>
+
+<section id="repro"><div class="wrap">
+  <div class="kicker">STEP 2</div>
+  <h2>まず論文を再現する</h2>
+  <p class="lead">González ら（ACS AMI 2024）は、PPD（p-フェニレンジアンモニウム）が黒い相を安定にすると DFT で示した。この結果を MLIP で再現できなければ、探索の結果も信用できない。再現の途中で、壁が 2 つあった。</p>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">壁 1：D3 の減衰関数で相の差が大きく変わる</h3>
+    <p>同じ PBE+D3 でも、減衰関数（zero と BJ）で、バルクの相の差が 2〜3 倍変わる。論文は zero を使っていた。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+      <button class="btn on" data-k="ag">α − γ</button><button class="btn" data-k="gd">γ − δ</button>
+    </div>
+    <svg id="d3chart" viewBox="0 0 640 250" width="100%" role="img" aria-label="D3 の減衰による相の差"></svg>
+    <p class="note">単位 meV/f.u.。QE は PBE、UMA は UMA（omat）に同じ D3 を足したもの。どれも格子まで緩和した値。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">壁 2：δ のスラブの向き</h3>
+    <div class="grid2">
+      <div>
+        <svg id="slabAnim" viewBox="0 0 300 220" width="100%" role="img" aria-label="δ スラブの向きの違い"></svg>
+        <div style="text-align:center"><button class="btn" id="slabBtn">向きを切り替える</button></div>
+      </div>
+      <div>
+        <p>最初は、δ の面内を 4.83 × 18.0 Å にしていた。この幅だと、PPD が隣の自分の周期像とぶつかり、結合が壊れる配置が多かった。</p>
+        <p>論文の δ (100) は、短い軸（4.83 Å、八面体の鎖の方向）を面直に向けていて、面内は 10.7 × 18.0 Å である。向きを合わせると、20 配置すべてで結合が保たれた。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">結果：PPD の ΔΔγ は論文と同じ符号・同じ順番</h3>
+    <svg id="pptChart" viewBox="0 0 640 260" width="100%" role="img" aria-label="PPD の ΔΔγ の比較"></svg>
+    <p class="note">単位 meV/Å²。正なら PPD が黒い相を有利にする。論文の値は SI の全エネルギーから計算し直した。UMA は zero 減衰。</p>
+  </div>
+</div></section>
+
+<section id="check"><div class="wrap">
+  <div class="kicker">STEP 3</div>
+  <h2>MLIP は DFT と合っているか</h2>
+  <p class="lead">同じ構造で UMA と QE（DFT）を比べた。D3 は SCF に影響しないので、QE の値は D3 の項だけ差し替えれば、zero と BJ の両方で比べられる。</p>
+  <div class="card reveal">
+    <table>
+      <thead><tr><th>全エネルギーの差（eV）</th><th>QE zero</th><th>UMA zero</th><th>QE BJ</th><th>UMA BJ</th></tr></thead>
+      <tbody>
+        <tr><td>Cs のスラブ γ − α(2×1)</td><td>−0.398</td><td>−0.354</td><td>−1.189</td><td>−1.144</td></tr>
+        <tr><td>PPD のスラブ γ − α(√2×√2)</td><td>−0.195</td><td>−0.287</td><td>−0.738</td><td>−0.830</td></tr>
+      </tbody>
+    </table>
+    <p>同じ構造なら、UMA と QE の差は 0.1 eV 以内に収まった。論文とのずれは MLIP の誤差ではなく、主に D3 の減衰と配置の探し方から来ている。</p>
+  </div>
+</div></section>
+
+<section id="screen"><div class="wrap">
+  <div class="kicker">STEP 4</div>
+  <h2>368 種の候補を MLIP で探す</h2>
+  <p class="lead">文献の 15 種、アルキル系 79 種、市販アミン 200 種、コリン系 74 種。各分子を γ と δ の表面に 4 通りずつ置いて緩和し、最も安定な配置で比べる。</p>
+  <div class="card reveal">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="btn on" id="v1">最初の設定：1 面に 2 個</button><button class="btn" id="v3">今の設定：面を広げて 1 面に 1 個</button>
+    </div>
+    <svg id="cover" viewBox="0 0 640 230" width="100%" role="img" aria-label="被覆の設定の違い"></svg>
+    <p id="coverText">γ の面（8.6 × 9.0 Å）に 2 個ずつ置くと、30 原子を超える分子は入りきらなかった。58 分子中 38 分子で、γ か δ のどちらかの配置が作れなかった。</p>
+  </div>
+  <div class="card reveal">
+    <h3 style="margin-top:0">並行して進めている確認</h3>
+    <ul>
+      <li><span class="pill g">済</span>固体の塩の μ：COD の結晶から H を付け直して計算。FAI・MAI・CsI は、どれも固体が気相のイオン対より約 1.6 eV 安定。</li>
+      <li><span class="pill y">進行中</span>PFP（Matlantis）で同じ計算を回し、MLIP を替えても順位が変わらないかを見る。</li>
+      <li><span class="pill y">進行中</span>上位の分子を DFT（QE）で確かめる。</li>
+    </ul>
+  </div>
+</div></section>
+
+<section id="insight"><div class="wrap">
+  <div class="kicker">STEP 5</div>
+  <h2>見えてきたこと：効くかどうかは被覆で決まる</h2>
+  <p class="lead">表面をびっしり覆ったとき（論文の条件）は、PPD も小さなアンモニウムも黒い相を有利にする。まばらに置いたとき（今の探索）は、30 分子すべてが表面の Cs より δ を有利にした。</p>
+  <div class="card reveal">
+    <svg id="slider" viewBox="0 0 640 210" width="100%" role="img" aria-label="被覆と有利な相の関係"></svg>
+    <input id="cov" type="range" min="0" max="100" value="15" style="width:100%" aria-label="被覆率">
+    <p class="note">模式図（数値は含まない）。被覆が上がると、黒い相（表面の席が密）のほうが得をしやすくなる。どこで入れ替わるかを、上位の分子で計算して確かめる。</p>
+  </div>
+  <div class="card reveal">
+    <p style="margin:0">黒い相の表面の Cs の席はペロブスカイトのかごの穴で、有機分子は Cs ほどうまく収まれない。1 分子ずつで比べると δ が有利になり、面の上の分子の数で比べると黒い相が有利になる。学会では、この 2 つの見方を両方示す。</p>
+  </div>
+</div></section>
+
+<section id="next"><div class="wrap">
+  <div class="kicker">STEP 6</div>
+  <h2>これからの手順</h2>
+  <ol class="steps reveal">
+    <li class="done"><b>論文（PPD）の再現</b><br><span class="note">D3 の減衰と δ の向きをそろえ、符号と順番が一致した。</span></li>
+    <li class="now"><b>368 種を薄い被覆で比べる</b><br><span class="note">UMA で 4 本並列、明日の夜に終わる見込み。</span></li>
+    <li><b>上位の分子で被覆を上げる</b><br><span class="note">どの被覆で黒い相が有利に変わるかを調べる。</span></li>
+    <li><b>PFP と DFT で確かめる</b><br><span class="note">MLIP を替えても、DFT にしても順位が変わらないか。</span></li>
+    <li><b>トラップ準位の判定</b><br><span class="note">元のパイプライン（α のスラブ、1 個置換、PDOS）で、性能を落とさないか。</span></li>
+    <li><b>実験家向けの発表（2027 年 4 月ごろ）</b></li>
+  </ol>
+</div></section>
+
+<footer><div class="wrap">計算：UMA（omat）＋ D3、QE 7.4（PBE＋D3、SSSP）。参考：González et al., ACS Appl. Mater. Interfaces 2024, 16, 39251。</div></footer>
+
+<script>
+(function(){
+  var root=document.documentElement, KEY="theme";
+  try{var t=localStorage.getItem(KEY); if(t) root.setAttribute("data-theme",t);}catch(e){}
+  document.getElementById("themeBtn").onclick=function(){
+    var dark = root.getAttribute("data-theme")==="dark" || (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+    var n = dark?"light":"dark"; root.setAttribute("data-theme",n); try{localStorage.setItem(KEY,n);}catch(e){}
+  };
+  var css=function(v){return getComputedStyle(root).getPropertyValue(v).trim();};
+  var NS="http://www.w3.org/2000/svg";
+  function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+  /* 背景：八面体の格子が黒と黄色に揺れる */
+  var cv=document.getElementById("lattice"), cx=cv.getContext("2d"), tt=0;
+  function size(){cv.width=cv.offsetWidth*devicePixelRatio;cv.height=cv.offsetHeight*devicePixelRatio;}
+  size(); addEventListener("resize",size);
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function draw(){
+    var w=cv.width,h=cv.height,s=46*devicePixelRatio; cx.clearRect(0,0,w,h);
+    for(var y=0;y<h+s;y+=s)for(var x=0;x<w+s;x+=s){
+      var ph=Math.sin((x*0.004+y*0.003)/devicePixelRatio - tt*0.6);
+      cx.fillStyle = ph>0.2? css("--yellow"): css("--black");
+      cx.save(); cx.translate(x,y); cx.rotate(Math.PI/4+ph*0.08); cx.fillRect(-s*0.3,-s*0.3,s*0.6,s*0.6); cx.restore();
+    }
+    tt+=0.016; if(!reduce) requestAnimationFrame(draw);
+  }
+  draw();
+
+  /* スクロールで出す */
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on"); if(e.target.dataset.run) window[e.target.dataset.run](); io.unobserve(e.target);}});},{threshold:.25});
+  document.querySelectorAll(".reveal").forEach(function(r){io.observe(r);});
+
+  /* STEP1：X の棒が動いて Δγ が変わる */
+  var metricCard=document.querySelector("#metric .card"); metricCard.dataset.run="runMetric";
+  window.runMetric=function(){
+    setTimeout(function(){
+      var xb=document.getElementById("xb"), xd=document.getElementById("xd");
+      xb.setAttribute("y",175); xb.setAttribute("height",45); xd.setAttribute("y",95); xd.setAttribute("height",125);
+      var ax=document.getElementById("ax"); ax.setAttribute("y1",175); ax.setAttribute("y2",95); document.getElementById("axt").setAttribute("y",138);
+      document.getElementById("arrows").setAttribute("opacity",1);
+    },400);
+  };
+
+  /* STEP2：D3 のグラフ */
+  var D3={labels:["論文（VASP, D3 zero）","QE D3 zero","QE D3 BJ","QE D3 なし","UMA D3 zero","UMA D3 BJ"],
+    ag:[57,58,187,136,7,127], gd:[104,101,146,48,84,131]};
+  var d3svg=document.getElementById("d3chart"), d3key="ag";
+  function drawD3(){
+    d3svg.innerHTML=""; var max=200, x0=200, W=400;
+    D3.labels.forEach(function(l,i){
+      var y=14+i*38, v=D3[d3key][i];
+      el("text",{x:x0-10,y:y+18,"text-anchor":"end","font-size":13,fill:css("--fg")},d3svg).textContent=l;
+      el("rect",{x:x0,y:y+4,width:W,height:22,fill:css("--soft"),rx:4},d3svg);
+      var b=el("rect",{class:"bar",x:x0,y:y+4,width:0,height:22,rx:4,fill:i===0?css("--fg"):(l.indexOf("zero")>=0?css("--accent"):css("--muted"))},d3svg);
+      var t=el("text",{x:x0+6,y:y+20,"font-size":13,fill:css("--fg")},d3svg); t.textContent=v;
+      requestAnimationFrame(function(){requestAnimationFrame(function(){b.setAttribute("width",W*v/max); t.setAttribute("x",x0+W*v/max+6);});});
+    });
+  }
+  document.querySelectorAll("[data-k]").forEach(function(b){b.onclick=function(){document.querySelectorAll("[data-k]").forEach(function(x){x.classList.remove("on")});b.classList.add("on");d3key=b.dataset.k;drawD3();};});
+  d3svg.parentNode.dataset.run="runD3"; window.runD3=drawD3;
+
+  /* STEP2：δ の向き */
+  var sa=document.getElementById("slabAnim"), wide=false;
+  function drawSlab(){
+    sa.innerHTML=""; var W=wide?240:108, x0=(300-W)/2;
+    el("text",{x:150,y:18,"text-anchor":"middle","font-size":13,fill:css("--fg")},sa).textContent=wide?"論文の向き：面内 10.7 Å":"最初の向き：面内 4.83 Å";
+    for(var k=-1;k<=1;k++){
+      var g=el("g",{opacity:k===0?1:.35},sa);
+      el("rect",{x:x0+k*W,y:120,width:W-4,height:80,fill:css("--yellow"),rx:6},g);
+      var mx=x0+k*W+W/2-2;
+      el("line",{x1:mx-62,y1:100,x2:mx+62,y2:100,stroke:css("--accent"),"stroke-width":10,"stroke-linecap":"round"},g);
+      el("circle",{cx:mx-62,cy:100,r:8,fill:css("--accent")},g); el("circle",{cx:mx+62,cy:100,r:8,fill:css("--accent")},g);
+    }
+    if(!wide){
+      [x0, x0+W].forEach(function(px){var c=el("circle",{cx:px-2,cy:100,r:14,fill:"none",stroke:css("--bad"),"stroke-width":3},sa);
+        var a=el("animate",{attributeName:"r",values:"10;18;10",dur:"1.2s",repeatCount:"indefinite"},c);});
+      el("text",{x:150,y:60,"text-anchor":"middle","font-size":13,fill:css("--bad")},sa).textContent="隣の自分とぶつかる";
+    } else {
+      el("text",{x:150,y:60,"text-anchor":"middle","font-size":13,fill:css("--good")},sa).textContent="20 配置すべてで結合が保たれた";
+    }
+  }
+  drawSlab(); document.getElementById("slabBtn").onclick=function(){wide=!wide;drawSlab();};
+
+  /* STEP2：PPD の結果 */
+  var pc=document.getElementById("pptChart");
+  window.runPPD=function(){
+    pc.innerHTML=""; var faces=["α (2×1)","α (√2×√2)","γ (√2×√2)"], uma=[9.8,5.2,8.2], pap=[15.5,10.5,11.4], base=220, sc=10;
+    el("line",{x1:60,y1:base,x2:620,y2:base,stroke:css("--line")},pc);
+    faces.forEach(function(f,i){
+      var x=110+i*180;
+      [[pap[i],css("--fg"),"論文"],[uma[i],css("--accent"),"UMA"]].forEach(function(d,j){
+        var b=el("rect",{class:"bar",x:x+j*56,y:base,width:46,height:0,fill:d[1],rx:4},pc);
+        var t=el("text",{x:x+j*56+23,y:base-4,"text-anchor":"middle","font-size":13,fill:css("--fg")},pc); t.textContent="+"+d[0];
+        setTimeout(function(){b.setAttribute("y",base-d[0]*sc);b.setAttribute("height",d[0]*sc);t.setAttribute("y",base-d[0]*sc-6);},150+i*250+j*120);
+      });
+      el("text",{x:x+51,y:base+22,"text-anchor":"middle","font-size":14,fill:css("--fg")},pc).textContent=f;
+    });
+    el("rect",{x:70,y:12,width:12,height:12,fill:css("--fg"),rx:2},pc); el("text",{x:88,y:23,"font-size":13,fill:css("--fg")},pc).textContent="論文";
+    el("rect",{x:140,y:12,width:12,height:12,fill:css("--accent"),rx:2},pc); el("text",{x:158,y:23,"font-size":13,fill:css("--fg")},pc).textContent="UMA（zero）";
+  };
+  pc.parentNode.dataset.run="runPPD";
+
+  /* STEP4：被覆の設定 */
+  var cvr=document.getElementById("cover"), mode="v1", timer=null;
+  function drawCover(){
+    cvr.innerHTML=""; clearTimeout(timer);
+    var faces = mode==="v1" ? [["γ 77 Å²",150,2],["δ 193 Å²",300,2]] : [["γ 155 Å²",270,1],["δ 193 Å²",300,1]];
+    var x=20;
+    faces.forEach(function(f,fi){
+      var w=f[1]; el("rect",{x:x,y:150,width:w,height:50,fill:fi===0?css("--black"):css("--yellow"),rx:6},cvr);
+      el("text",{x:x+w/2,y:222,"text-anchor":"middle","font-size":13,fill:css("--fg")},cvr).textContent=f[0];
+      for(var k=0;k<f[2];k++){
+        var cx0=x+w*(k+0.5)/f[2], big=(mode==="v1"&&fi===0);
+        var g=el("g",{transform:"translate("+cx0+",-40)"},cvr);
+        el("ellipse",{cx:0,cy:0,rx:big?48:40,ry:16,fill:css("--accent"),opacity:.9},g);
+        var an=el("animateTransform",{attributeName:"transform",type:"translate",from:cx0+" -40",to:cx0+" 128",dur:"0.9s",begin:(0.2+k*0.25+fi*0.4)+"s",fill:"freeze"},g);
+        if(big && k===1){ (function(gx){ timer=setTimeout(function(){ el("circle",{cx:x0c,cy:128,r:22,fill:"none",stroke:css("--bad"),"stroke-width":3},cvr); },1600);})(g); var x0c=x+w/2; }
+      }
+      x+=w+30;
+    });
+    document.getElementById("coverText").textContent = mode==="v1"
+      ? "γ の面（8.6 × 9.0 Å）に 2 個ずつ置くと、30 原子を超える分子は入りきらなかった。58 分子中 38 分子で、γ か δ のどちらかの配置が作れなかった。"
+      : "γ の面を 2 倍（約 155 Å²）にして、1 面に 1 個だけ置く。どの分子も 4 配置とも置けるようになった。γ と δ で 1 Å² あたりの分子の数がほぼそろうので、μ の取り方の影響も小さい（1 eV あたり 1.3 meV/Å²）。";
+  }
+  document.getElementById("v1").onclick=function(){mode="v1";this.classList.add("on");document.getElementById("v3").classList.remove("on");drawCover();};
+  document.getElementById("v3").onclick=function(){mode="v3";this.classList.add("on");document.getElementById("v1").classList.remove("on");drawCover();};
+  cvr.parentNode.dataset.run="runCover"; window.runCover=drawCover;
+
+  /* STEP5：被覆のスライダー（模式図） */
+  var sl=document.getElementById("slider"), cov=document.getElementById("cov");
+  function drawSlider(){
+    var c=cov.value/100; sl.innerHTML="";
+    var n=Math.round(1+c*7);
+    el("rect",{x:20,y:120,width:280,height:50,fill:css("--black"),rx:6},sl);
+    el("rect",{x:340,y:120,width:280,height:50,fill:css("--yellow"),rx:6},sl);
+    for(var i=0;i<n;i++){el("ellipse",{cx:20+280*(i+0.5)/n,cy:108,rx:12,ry:9,fill:css("--accent")},sl);}
+    var nd=Math.max(1,Math.round(1+c*3));
+    for(i=0;i<nd;i++){el("ellipse",{cx:340+280*(i+0.5)/nd,cy:108,rx:12,ry:9,fill:css("--accent")},sl);}
+    el("text",{x:160,y:192,"text-anchor":"middle","font-size":13,fill:css("--fg")},sl).textContent="黒い相の表面（席が密）";
+    el("text",{x:480,y:192,"text-anchor":"middle","font-size":13,fill:css("--fg")},sl).textContent="δ の表面（席がまばら）";
+    var win=c>0.5;
+    var t=el("text",{x:320,y:40,"text-anchor":"middle","font-size":18,"font-weight":"700",fill:win?css("--good"):css("--bad")},sl);
+    t.textContent= win ? "被覆が高い → 黒い相が有利" : "被覆が低い → δ が有利";
+    el("text",{x:320,y:66,"text-anchor":"middle","font-size":13,fill:css("--muted")},sl).textContent="被覆 "+Math.round(c*100)+"%（模式）";
+  }
+  cov.oninput=drawSlider; drawSlider();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(){drawSlab();drawSlider();});
+  document.getElementById("themeBtn").addEventListener("click",function(){setTimeout(function(){drawSlab();drawSlider();drawD3();},30);});
+})();
+</script>
+</body>
+</html>
