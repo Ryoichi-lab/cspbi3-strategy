@@ -79,7 +79,7 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
 </header>
 
 <nav class="toc"><div class="wrap">
-  <a href="#metric">1. 指標</a><a href="#repro">2. 論文の再現</a><a href="#exp">2.5 実験の裏付け</a><a href="#check">3. MLIP の検証</a><a href="#screen">4. 候補探索</a><a href="#insight">5. わかったこと</a><a href="#next">6. これから</a>
+  <a href="#metric">1. 指標</a><a href="#repro">2. 論文の再現</a><a href="#exp">2.5 実験の裏付け</a><a href="#check">3. MLIP の検証</a><a href="#screen">4. 候補探索</a><a href="#insight">5. わかったこと</a><a href="#wall">5.5 物差しの壁</a><a href="#model">5.6 選び方</a><a href="#next">6. これから</a>
 </div></nav>
 
 <section id="metric"><div class="wrap">
@@ -285,14 +285,74 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
   </div>
 </div></section>
 
+<section id="wall"><div class="wrap">
+  <div class="kicker">STEP 5.5</div>
+  <h2>壁：今の物差しでは 1 価と 2 価を区別できない</h2>
+  <p class="lead">Ding の実験には、アミノ基が 1 個のアニリニウムは効かない、という対照がある。González の物差し（表面エネルギー）で同じ比較をすると、実験の序列が出なかった。</p>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">μ（化学ポテンシャル）＝「塩を 1 個持ってくる値段」</h3>
+    <p>表面の Cs を有機カチオンに置き換えるには、その塩（XI）をどこかから持ってくる必要がある。どこから持ってくるかで、置き換えの得・損が変わる。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+      <button class="btn on" id="muGas">気相の基準（González と同じ）</button><button class="btn" id="muSolid">固体の塩の基準</button>
+    </div>
+    <svg id="muChart" viewBox="0 0 640 290" width="100%" role="img" aria-label="μ の基準による ΔΔγ の違い"></svg>
+    <p id="muText" class="note"></p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">なぜ合わないのか：実験は「速さ」、計算は「安定さ」</h3>
+    <div class="grid2">
+      <div><p><b>実験（Ding）</b><br>湿った空気の中で、黄色くなるまでの時間を比べている。PPD の効き方として挙げられているのは、2 本の NH₃⁺ で八面体をつなぎ止めて傾きを防ぐこと、環で水をはじくこと。どちらも、変化を遅らせる効果である。</p></div>
+      <div><p><b>計算（González の物差し）</b><br>十分に時間がたったときに、どちらの相の表面が安定かを比べる。変化の速さは見ていない。固体の基準で PPD が下がるのは、PPDI₂ の結晶がとても安定（気相の分子より 2.77 eV 低い）で、そこから引き抜くと損が大きいためである。</p></div>
+    </div>
+    <p style="margin-bottom:0">González が主張しているのは「PPD は Cs のままの表面より黒い相を有利にする」までで、ここは私たちも再現できた。アニリニウムの結果は González の誤りではなく、<b>その物差しで言える範囲の限界</b>を示している。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">MLIP どうしの違い：PPD の 1 分子あたりの Δr</h3>
+    <table>
+      <thead><tr><th>密な被覆</th><th>UMA</th><th>PFP</th></tr></thead>
+      <tbody>
+        <tr><td>PPD</td><td class="neg">+0.40 eV（δ 寄り）</td><td class="pos">−0.16 eV（γ 寄り）</td></tr>
+        <tr><td>1 価（アニリニウム・MA）</td><td>約 0</td><td>約 0</td></tr>
+      </tbody>
+    </table>
+    <p class="note">PFP なら「PPD は 1 価より γ 寄り」で実験と同じ向きになる。どちらが正しいかを QE（DFT）で判定している。D3 を zero に差し替えても、候補どうしの比較はほとんど変わらなかった（PPD の ΔΔγ は +16.78 → +16.74）。</p>
+  </div>
+</div></section>
+
+<section id="model"><div class="wrap">
+  <div class="kicker">STEP 5.6</div>
+  <h2>選び方：González を土台に、関門を重ねる</h2>
+  <p class="lead">表面エネルギーだけでは選べないので、関門を何段か通して残った分子を並べる。物差しの合否は、実験の対照（PPD は効く、アニリニウムは効かない）で決める。</p>
+  <div class="card reveal">
+    <svg id="funnel" viewBox="0 0 640 330" width="100%" role="img" aria-label="候補を選ぶ関門"></svg>
+    <div style="text-align:center"><button class="btn" id="funnelBtn">もう一度流す</button></div>
+  </div>
+  <div class="card reveal">
+    <h3 style="margin-top:0">1 価と 2 価を区別するための新しい物差し</h3>
+    <table>
+      <thead><tr><th>物差し</th><th>何を見るか</th><th>期待する結果</th><th>状況</th></tr></thead>
+      <tbody>
+        <tr><td>水の吸着</td><td>表面に水がどれだけ強く付くか</td><td>PPD の表面だけ弱い</td><td><span class="pill y">計算中</span></td></tr>
+        <tr><td>八面体の傾きにくさ</td><td>表面の八面体を傾けたときのエネルギーの上がり方</td><td>PPD だけ硬い</td><td><span class="pill y">計算中</span></td></tr>
+        <tr><td>2 点止めの合い方</td><td>2 つの NH₃⁺ の間隔と、表面の穴の間隔</td><td>黒い相にだけ合う</td><td><span class="pill b">これから</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note">PPD とアニリニウムで差が出た物差しだけを関門に使う。機械学習の重みは、実験の正解（効いた・効かなかった）が文献の 15〜20 分子ぶん集まってから決める。</p>
+  </div>
+</div></section>
+
 <section id="next"><div class="wrap">
   <div class="kicker">STEP 6</div>
   <h2>これからの手順</h2>
   <ol class="steps reveal">
     <li class="done"><b>論文（PPD）の再現</b><br><span class="note">D3 の減衰と δ の向きをそろえ、符号と順番が一致した。</span></li>
-    <li class="now"><b>368 種を薄い被覆で比べる</b><br><span class="note">UMA で 4 本並列、明日の夜に終わる見込み。</span></li>
-    <li><b>上位の分子で被覆を上げる</b><br><span class="note">どの被覆で黒い相が有利に変わるかを調べる。</span></li>
-    <li><b>PFP と DFT で確かめる</b><br><span class="note">MLIP を替えても、DFT にしても順位が変わらないか。</span></li>
+    <li class="done"><b>実験の対照で物差しを試す</b><br><span class="note">Ding のアニリニウム。表面エネルギーだけでは 1 価と 2 価を区別できないとわかった。</span></li>
+    <li class="now"><b>区別できる物差しを作る</b><br><span class="note">水の吸着、八面体の傾きにくさ。PPD とアニリニウムで試している。</span></li>
+    <li class="now"><b>368 種を比べる</b><br><span class="note">UMA（薄い被覆）と PFP（密な被覆は済み、薄い被覆はこれから）。</span></li>
+    <li><b>DFT で確かめる</b><br><span class="note">UMA と PFP で食い違う PPD の Δr を QE で判定。上位 10 個も QE で確かめる。</span></li>
     <li><b>トラップ準位の判定</b><br><span class="note">元のパイプライン（α のスラブ、1 個置換、PDOS）で、性能を落とさないか。</span></li>
     <li><b>実験家向けの発表（2027 年 4 月ごろ）</b></li>
   </ol>
@@ -455,6 +515,48 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
     el("rect",{x:150,y:10,width:12,height:12,fill:css("--accent"),rx:2},xs); el("text",{x:168,y:21,"font-size":13,fill:css("--fg")},xs).textContent="PPDI 処理後";
   }
   xs.parentNode.dataset.run="runXps"; window.runXps=drawXps;
+
+  /* STEP5.5：μ の基準 */
+  var mc=document.getElementById("muChart"), muMode="gas";
+  var MU={gas:{v:[8.2,22.6,22.9],t:"気相の基準では、どれも ＋（黒い相が有利）になり、1 価のアニリニウムやメチルアンモニウムが PPD より上に来る。全部「効く」ことになり、選べない。"},
+          solid:{v:[-13.2,-2.2,-2.2],t:"固体の塩を基準にすると、どれも −（効かない）になり、PPD が一番下になる。アニリニウムの値はメチルアンモニウムと同じと仮定した見積もり（ヨウ化アニリニウムの固体は計算中）。どちらの基準でも、Ding の序列（PPD は効く、アニリニウムは効かない）は出ない。"}};
+  function drawMu(){
+    mc.innerHTML=""; var names=["PPD（2 価）","アニリニウム（1 価）","メチルアンモニウム（1 価）"], v=MU[muMode].v, z=140, sc=4.5;
+    el("line",{x1:40,y1:z,x2:620,y2:z,stroke:css("--fg"),"stroke-width":1},mc);
+    el("text",{x:44,y:z-100,"font-size":12,fill:css("--good")},mc).textContent="＋ 黒い相が有利";
+    el("text",{x:44,y:z+110,"font-size":12,fill:css("--bad")},mc).textContent="− 効かない";
+    names.forEach(function(n,i){
+      var x=140+i*170, val=v[i], h=Math.abs(val)*sc;
+      var b=el("rect",{class:"bar",x:x,y:z,width:80,height:0,rx:4,fill:i===0?css("--accent"):css("--muted")},mc);
+      var t=el("text",{x:x+40,y:z,"text-anchor":"middle","font-size":13,fill:css("--fg")},mc); t.textContent=(val>0?"+":"")+val;
+      el("text",{x:x+40,y:z+128,"text-anchor":"middle","font-size":12,fill:css("--fg")},mc).textContent=n;
+      setTimeout(function(){ if(val>=0){b.setAttribute("y",z-h);b.setAttribute("height",h);t.setAttribute("y",z-h-6);} else {b.setAttribute("y",z);b.setAttribute("height",h);t.setAttribute("y",z+h+16);} },60+i*150);
+    });
+    document.getElementById("muText").textContent=MU[muMode].t+"（ΔΔγ、meV/Å²、UMA、密な被覆）";
+  }
+  document.getElementById("muGas").onclick=function(){muMode="gas";this.classList.add("on");document.getElementById("muSolid").classList.remove("on");drawMu();};
+  document.getElementById("muSolid").onclick=function(){muMode="solid";this.classList.add("on");document.getElementById("muGas").classList.remove("on");drawMu();};
+  mc.parentNode.dataset.run="runMu"; window.runMu=drawMu;
+
+  /* STEP5.6：関門のじょうご */
+  var fn=document.getElementById("funnel"), ftm=[];
+  function drawFunnel(){
+    fn.innerHTML=""; ftm.forEach(clearTimeout); ftm=[];
+    var gates=[["368 種",""],["関門 1：González","同じ基準で PPD 以上の表面エネルギー"],["関門 2：Ding","水をはじく・八面体を止める（PPD は通り、アニリニウムは落ちる線）"],["関門 3：性能","トラップ準位を作らない"],["上位","UMA・PFP で上位 → QE で確認"]];
+    gates.forEach(function(g,i){
+      var w=580-i*80, x=(640-w)/2, y=14+i*62;
+      var r=el("rect",{x:x,y:y,width:w,height:46,rx:10,fill:i===4?css("--good"):css("--soft"),stroke:css("--line"),opacity:0},fn);
+      var t1=el("text",{x:320,y:y+20,"text-anchor":"middle","font-size":14,"font-weight":"700",fill:i===4?"#fff":css("--fg"),opacity:0},fn); t1.textContent=g[0];
+      var t2=el("text",{x:320,y:y+38,"text-anchor":"middle","font-size":11,fill:i===4?"#fff":css("--muted"),opacity:0},fn); t2.textContent=g[1];
+      ftm.push(setTimeout(function(){[r,t1,t2].forEach(function(e){e.style.transition="opacity .5s";e.setAttribute("opacity",1);});},200+i*500));
+    });
+    for(var k=0;k<24;k++){(function(k){
+      var survive = k%6===0 ? 4 : (k%3===0 ? 3 : (k%2===0 ? 2 : 1));
+      var c=el("circle",{cx:60+k*22,cy:6,r:4,fill:css("--accent"),opacity:.85},fn);
+      ftm.push(setTimeout(function(){c.style.transition="all 2.2s ease-in";var gy=14+survive*62+30;c.setAttribute("cy",survive>=4?310:gy);c.setAttribute("cx",survive>=4?250+(k%6)*28:60+k*22);if(survive<4)c.setAttribute("opacity",.15);},2600+k*40));
+    })(k);}
+  }
+  document.getElementById("funnelBtn").onclick=drawFunnel; fn.parentNode.dataset.run="runFunnel"; window.runFunnel=drawFunnel;
 
   /* STEP2：PPD の結果 */
   var pc=document.getElementById("pptChart");
