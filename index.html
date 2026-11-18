@@ -79,7 +79,7 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
 </header>
 
 <nav class="toc"><div class="wrap">
-  <a href="#metric">1. 指標</a><a href="#repro">2. 論文の再現</a><a href="#check">3. MLIP の検証</a><a href="#screen">4. 候補探索</a><a href="#insight">5. わかったこと</a><a href="#next">6. これから</a>
+  <a href="#metric">1. 指標</a><a href="#repro">2. 論文の再現</a><a href="#exp">2.5 実験の裏付け</a><a href="#check">3. MLIP の検証</a><a href="#screen">4. 候補探索</a><a href="#insight">5. わかったこと</a><a href="#next">6. これから</a>
 </div></nav>
 
 <section id="metric"><div class="wrap">
@@ -184,6 +184,56 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
   </div>
 </div></section>
 
+<section id="exp"><div class="wrap">
+  <div class="kicker">STEP 2.5</div>
+  <h2>実験の裏付け：Ding ら（2019）</h2>
+  <p class="lead">González の計算は、Ding らの実験（ACS Appl. Mater. Interfaces 2019, 11, 37720）を説明するためのものだった。PPD が黒い相を安定にすることは、実験が先に示している。</p>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">処理の手順</h3>
+    <svg id="procSvg" viewBox="0 0 640 170" width="100%" role="img" aria-label="PPDI 後処理の手順"></svg>
+    <p class="note">CsI と HPbI₃ の溶液（0.6 M、DMF）をスピンコートし、180 °C で 15 分焼いて黒い膜を作る。冷ましてから PPDI のイソプロパノール溶液（1 mg/mL、100 µL）をスピンコートし、100 °C で 5 分焼く。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">湿気にさらしたときの色の変化</h3>
+    <svg id="filmSvg" viewBox="0 0 640 190" width="100%" role="img" aria-label="湿気にさらした膜の色の変化"></svg>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" id="filmBtn">もう一度再生</button><span class="note">相対湿度 50〜70% の空気にさらした様子の模式図（論文の写真の記述にもとづく）</span></div>
+    <p>アミノ基が 1 個のアニリニウム（PDI）で処理した膜は、20 分でほぼ黄色になった。PPDI で処理した膜は茶色（黒い相）のままだった。著者らは「アミノ基が 2 個あることが必須」と結論している。乾燥空気（相対湿度 20% 未満）では、処理なしの膜が 48 時間以内に黄色くなり、PPDI の膜は 30 日以上黒い相を保った。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">表面の組成（XPS）：表面の Cs の多くが PPD に置き換わっている</h3>
+    <svg id="xpsSvg" viewBox="0 0 640 220" width="100%" role="img" aria-label="XPS による表面組成"></svg>
+    <p>PPD は N を 2 個持つので、処理後の表面では PPD と Cs がおよそ 0.7 : 1 になる。表面をかなり覆っている、つまり González と同じ「密な被覆」に近い。2 次元の層状ペロブスカイト（PPDPbI₄）はできておらず、吸収端も変わらないので、PPD は表面にだけいる。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">濃度と性能</h3>
+    <table>
+      <thead><tr><th>PPDI の濃度</th><th>効率（PCE）</th><th>相の安定性</th></tr></thead>
+      <tbody>
+        <tr><td>処理なし</td><td>9.3%</td><td>乾燥空気でも 48 時間以内に黄色</td></tr>
+        <tr><td>0.5 mg/mL</td><td>9.8%</td><td rowspan="3">濃度を上げるほど良くなる（本文の記述、数値なし）</td></tr>
+        <tr><td>1.0 mg/mL</td><td>10.4%</td></tr>
+        <tr><td>1.5 mg/mL</td><td>9.6%</td></tr>
+      </tbody>
+    </table>
+    <p class="note">PPDI 1.0 mg/mL の素子は、封止なしの乾燥箱で 504 時間後も初めの効率の 91% を保った。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">計算とのつながりと、注意する点</h3>
+    <ul>
+      <li><span class="pill g">合う</span>被覆が高いほど黒い相が有利という計算の見方と、濃度を上げるほど安定という実験の傾向は同じ向き。</li>
+      <li><span class="pill g">合う</span>密な条件の計算で PPD が黒い相を有利にする結果は、実験の結論と同じ向き。</li>
+      <li><span class="pill y">確認中</span>アニリニウム（1 価）は実験では効かなかった。計算でも PPD より劣るかを確かめている。候補の多くは 1 価なので、物差しの確認になる。</li>
+      <li><span class="pill b">注意</span>実験で見ているのは数日〜数週間もつかどうかで、表面エネルギーを直接測ってはいない。言えるのは「同じ向き」まで。</li>
+      <li><span class="pill b">注意</span>原料の HPbI₃ はジメチルアンモニウム（DMA）を含みうる（Ke ら, Nat. Commun. 2018）。膜に DMA が入っていれば、それ自体も安定化に効く。ただし処理なしの膜も同じ原料なので、PPD の有無の比較は成り立つ。</li>
+    </ul>
+  </div>
+</div></section>
+
 <section id="check"><div class="wrap">
   <div class="kicker">STEP 3</div>
   <h2>MLIP は DFT と合っているか</h2>
@@ -248,7 +298,7 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
   </ol>
 </div></section>
 
-<footer><div class="wrap">計算：UMA（omat）＋ D3、QE 7.4（PBE＋D3、SSSP）。参考：González et al., ACS Appl. Mater. Interfaces 2024, 16, 39251。</div></footer>
+<footer><div class="wrap">計算：UMA（omat）＋ D3、QE 7.4（PBE＋D3、SSSP）。参考：González et al., ACS Appl. Mater. Interfaces 2024, 16, 39251。Ding et al., ACS Appl. Mater. Interfaces 2019, 11, 37720。Ke et al., Nat. Commun. 2018, 9, 4785。</div></footer>
 
 <script>
 (function(){
@@ -349,6 +399,62 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
     });
   }
   drawFaces();
+
+  /* STEP2.5：手順 */
+  var ps=document.getElementById("procSvg");
+  function drawProc(){
+    ps.innerHTML=""; var steps=[["スピンコート","CsI＋HPbI₃"],["180 °C 15 分","黒い膜"],["PPDI 溶液","1 mg/mL"],["100 °C 5 分","PPD が表面に"]];
+    steps.forEach(function(st,i){
+      var x=20+i*155, g=el("g",{opacity:0},ps);
+      el("rect",{x:x,y:70,width:130,height:34,rx:6,fill:i===0?css("--muted"):css("--black")},g);
+      if(i>=3){for(var k=0;k<5;k++)el("ellipse",{cx:x+15+k*25,cy:66,rx:9,ry:5,fill:css("--accent")},g);}
+      if(i===2){for(k=0;k<4;k++){var d=el("circle",{cx:x+25+k*27,cy:30,r:4,fill:css("--accent")},g);el("animate",{attributeName:"cy",values:"20;64",dur:"1.2s",repeatCount:"indefinite",begin:(k*0.25)+"s"},d);}}
+      if(i===1||i===3){var w=el("path",{d:"M"+(x+40)+",50 q8,-10 0,-20 q-8,-10 0,-20 M"+(x+90)+",50 q8,-10 0,-20 q-8,-10 0,-20",stroke:css("--bad"),fill:"none","stroke-width":2},g);}
+      el("text",{x:x+65,y:128,"text-anchor":"middle","font-size":14,fill:css("--fg")},g).textContent=st[0];
+      el("text",{x:x+65,y:148,"text-anchor":"middle","font-size":12,fill:css("--muted")},g).textContent=st[1];
+      if(i<3) el("text",{x:x+142,y:92,"text-anchor":"middle","font-size":16,fill:css("--muted")},g).textContent="›";
+      setTimeout(function(){g.style.transition="opacity .6s";g.setAttribute("opacity",1);},300+i*600);
+    });
+  }
+  ps.parentNode.dataset.run="runProc"; window.runProc=drawProc;
+
+  /* STEP2.5：膜の色 */
+  var fsv=document.getElementById("filmSvg"), ftimer=null;
+  function drawFilm(){
+    fsv.innerHTML=""; clearInterval(ftimer);
+    var films=[["処理なし",8],["アニリニウム（PDI）",20],["PPDI",9999]], rects=[];
+    films.forEach(function(f,i){
+      var x=40+i*200; rects.push(el("rect",{x:x,y:30,width:160,height:100,rx:8,fill:"#3a2a22",stroke:css("--line")},fsv));
+      el("text",{x:x+80,y:152,"text-anchor":"middle","font-size":14,fill:css("--fg")},fsv).textContent=f[0];
+    });
+    var clock=el("text",{x:320,y:182,"text-anchor":"middle","font-size":14,fill:css("--muted")},fsv); var m=0;
+    function mix(a,b,t){return "rgb("+a.map(function(v,i){return Math.round(v+(b[i]-v)*t)}).join(",")+")";}
+    ftimer=setInterval(function(){
+      m+=1; clock.textContent="湿った空気に "+m+" 分";
+      films.forEach(function(f,i){var t=Math.min(1,m/f[1]); if(f[1]>1000)t=0; rects[i].setAttribute("fill",mix([58,42,34],[222,196,90],t));});
+      if(m>=60) clearInterval(ftimer);
+    },90);
+  }
+  document.getElementById("filmBtn").onclick=drawFilm; fsv.parentNode.dataset.run="runFilm"; window.runFilm=drawFilm;
+
+  /* STEP2.5：XPS */
+  var xs=document.getElementById("xpsSvg");
+  function drawXps(){
+    xs.innerHTML=""; var d=[["Cs",13.44,5.82],["N",1.66,8.02]], base=180, sc=9;
+    el("line",{x1:60,y1:base,x2:600,y2:base,stroke:css("--line")},xs);
+    d.forEach(function(r,i){
+      var x=120+i*260;
+      [[r[1],css("--muted"),"処理前"],[r[2],css("--accent"),"PPDI 処理後"]].forEach(function(v,j){
+        var b=el("rect",{class:"bar",x:x+j*70,y:base,width:56,height:0,rx:4,fill:v[1]},xs);
+        var t=el("text",{x:x+j*70+28,y:base-4,"text-anchor":"middle","font-size":13,fill:css("--fg")},xs); t.textContent=v[0]+"%";
+        setTimeout(function(){b.setAttribute("y",base-v[0]*sc);b.setAttribute("height",v[0]*sc);t.setAttribute("y",base-v[0]*sc-6);},200+i*300+j*150);
+      });
+      el("text",{x:x+63,y:base+22,"text-anchor":"middle","font-size":15,fill:css("--fg")},xs).textContent=r[0];
+    });
+    el("rect",{x:70,y:10,width:12,height:12,fill:css("--muted"),rx:2},xs); el("text",{x:88,y:21,"font-size":13,fill:css("--fg")},xs).textContent="処理前";
+    el("rect",{x:150,y:10,width:12,height:12,fill:css("--accent"),rx:2},xs); el("text",{x:168,y:21,"font-size":13,fill:css("--fg")},xs).textContent="PPDI 処理後";
+  }
+  xs.parentNode.dataset.run="runXps"; window.runXps=drawXps;
 
   /* STEP2：PPD の結果 */
   var pc=document.getElementById("pptChart");
