@@ -28,7 +28,17 @@ header.hero{min-height:88vh;display:flex;align-items:center;position:relative;ov
 .hero h1{font-size:clamp(28px,5vw,46px);line-height:1.3;margin:0 0 12px}
 .hero p{color:var(--muted);max-width:620px;margin:0}
 .tag{display:inline-block;font-size:13px;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:2px 12px;margin-bottom:16px}
-#lattice{position:absolute;inset:0;z-index:0;opacity:.18;pointer-events:none}
+#lattice{position:absolute;inset:0;z-index:0;opacity:.07;pointer-events:none}
+.heroGrid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center}
+@media (max-width:760px){.heroGrid{grid-template-columns:1fr}}
+.phaseFig{margin:0;background:color-mix(in srgb,var(--card) 85%,transparent);border:1px solid var(--line);border-radius:16px;padding:14px}
+.phaseSteps{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px}
+.phaseSteps .arr{color:var(--muted)}
+.ph{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:12px;padding:4px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.3;font-family:inherit}
+.ph b{font-size:18px} .ph span{font-size:11px;color:var(--muted)}
+.ph.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+#phaseCap{text-align:center;min-height:3.2em;margin-top:6px}
+
 .hero .wrap{position:relative;z-index:1}
 nav.toc{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);z-index:5}
 nav.toc .wrap{display:flex;gap:18px;overflow-x:auto;white-space:nowrap;padding:10px 16px;font-size:14px}
@@ -71,10 +81,21 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
 
 <header class="hero">
   <canvas id="lattice"></canvas>
-  <div class="wrap">
-    <span class="tag">2026-11-19 時点の進め方</span>
-    <h1>有機カチオンで<br>黒い CsPbI₃ を守る</h1>
-    <p>CsPbI₃ は、太陽電池に使える黒い相（γ・α）から、使えない黄色い相（δ）へ変わりやすい。表面に置く有機カチオンで黒い相を安定にできるかを、機械学習ポテンシャル（MLIP）で広く探し、DFT で確かめる。</p>
+  <div class="wrap heroGrid">
+    <div>
+      <span class="tag">2026-11-19 時点の進め方</span>
+      <h1>有機カチオンで<br>黒い CsPbI₃ を守る</h1>
+      <p>CsPbI₃ は、高温では黒い α 相で、冷やすと黒いまま γ 相になる。太陽電池に使えるのはこの黒い相だが、室温で本当に安定なのは黄色い δ 相で、湿気があると δ に変わって使えなくなる。表面に置く有機カチオンで黒い相を保てるかを、機械学習ポテンシャル（MLIP）で広く探し、DFT で確かめる。</p>
+    </div>
+    <figure class="phaseFig" aria-label="CsPbI3 の α、γ、δ 相の変化">
+      <svg id="phaseSvg" viewBox="0 0 360 300" width="100%"></svg>
+      <div class="phaseSteps">
+        <button class="ph on" data-i="0"><b>α</b><span>高温・黒</span></button><span class="arr">→</span>
+        <button class="ph" data-i="1"><b>γ</b><span>室温・黒</span></button><span class="arr">→</span>
+        <button class="ph" data-i="2"><b>δ</b><span>湿気・黄色</span></button>
+      </div>
+      <figcaption id="phaseCap" class="note"></figcaption>
+    </figure>
   </div>
 </header>
 
@@ -430,6 +451,56 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
     tt+=0.016; if(!reduce) requestAnimationFrame(draw);
   }
   draw();
+
+
+  /* イントロ：α → γ → δ の結晶 */
+  (function(){
+    var svg=document.getElementById("phaseSvg"); if(!svg) return;
+    var d=26, NX=5, NY=4, N=NX*NY, ox=180-(NX-1)*d, oy=150-(NY-1)*d, TH=13*Math.PI/180;
+    var CAP=["α 相：八面体（PbI₆）が頂点でまっすぐつながる。高温（約 300 °C 以上）で安定。黒く、光をよく吸う（バンドギャップ 約 1.7 eV）。",
+             "γ 相：冷やすと八面体が交互に傾いた形で残る。黒いまま使えるが、室温では準安定にすぎない。",
+             "δ 相：八面体が辺でつながった鎖に組み変わる。室温で最も安定。黄色く（約 2.8 eV）、太陽電池に使えない。湿気があると速く進む。"];
+    function grid(th){var P=[];var sp=2*d*Math.cos(th);var x0=180-(NX-1)*sp/2,y0=150-(NY-1)*sp/2;
+      for(var j=0;j<NY;j++)for(var i=0;i<NX;i++)P.push({x:x0+i*sp,y:y0+j*sp,r:((i+j)%2?1:-1)*th});return P;}
+    function delta(){var P=[],C=[{x:60,n:7},{x:160,n:7},{x:260,n:6}],k=0;
+      C.forEach(function(c){for(var j=0;j<c.n;j++){P.push({x:c.x+(j%2)*d,y:150-(c.n-1)*d/2+j*d,r:0});}});return P;}
+    function csA(th){var P=[];var sp=2*d*Math.cos(th);var x0=180-(NX-1)*sp/2,y0=150-(NY-1)*sp/2;
+      for(var j=0;j<NY-1;j++)for(var i=0;i<NX-1;i++)P.push({x:x0+(i+0.5)*sp,y:y0+(j+0.5)*sp});return P;}
+    var NC=(NX-1)*(NY-1), csd=[];
+    for(var k=0;k<NC;k++)csd.push({x:[123,223,323][k%3],y:75+Math.floor(k/3)*50});
+    var S=[{o:grid(0),c:csA(0),col:0},{o:grid(TH),c:csA(TH),col:0},{o:delta(),c:csd,col:1}];
+    var NS="http://www.w3.org/2000/svg";
+    function mk(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;}
+    var CS=[],OC=[],PB=[];
+    for(var k=0;k<NC;k++)CS.push(mk("circle",{r:6.5,"fill-opacity":.9}));
+    for(var k=0;k<N;k++){OC.push(mk("polygon",{"stroke-width":1.2,"stroke-linejoin":"round"}));PB.push(mk("circle",{r:3}));}
+    var lab=mk("text",{x:12,y:24,"font-size":20,"font-weight":700});
+    function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+    function hex(c){c=c.replace("#","");return [0,2,4].map(function(i){return parseInt(c.substr(i,2),16);});}
+    function mix(a,b,t){var A=hex(a),B=hex(b);return "rgb("+A.map(function(v,i){return Math.round(v+(B[i]-v)*t);}).join(",")+")";}
+    var cur={i:0,t:1,from:0}; var NAMES=["α","γ","δ"];
+    function render(){
+      var A=S[cur.from],B=S[cur.i],t=cur.t,e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      var colT=A.col+(B.col-A.col)*e, oc=mix(css("--black"),css("--yellow"),colT);
+      for(var k=0;k<N;k++){
+        var a=A.o[k],b=B.o[k],x=a.x+(b.x-a.x)*e,y=a.y+(b.y-a.y)*e,r=a.r+(b.r-a.r)*e,pts=[];
+        for(var q=0;q<4;q++){var ang=r+q*Math.PI/2;pts.push((x+d*Math.cos(ang)).toFixed(1)+","+(y+d*Math.sin(ang)).toFixed(1));}
+        OC[k].setAttribute("points",pts.join(" ")); OC[k].setAttribute("fill",oc); OC[k].setAttribute("stroke",css("--bg"));
+        PB[k].setAttribute("cx",x);PB[k].setAttribute("cy",y);PB[k].setAttribute("fill",css("--muted"));
+        if(k<NC){var ca=A.c[k],cb=B.c[k]; CS[k].setAttribute("cx",ca.x+(cb.x-ca.x)*e); CS[k].setAttribute("cy",ca.y+(cb.y-ca.y)*e); CS[k].setAttribute("fill",css("--accent"));}
+      }
+      lab.textContent=NAMES[cur.i]+" 相"; lab.setAttribute("fill",css("--fg"));
+    }
+    function go(i){cur.from=cur.i;cur.i=i;cur.t=0;var t0=performance.now(),dur=reduce?1:1600;
+      document.querySelectorAll(".ph").forEach(function(b){b.classList.toggle("on",+b.dataset.i===i);});
+      document.getElementById("phaseCap").textContent=CAP[i];
+      (function step(now){cur.t=Math.min(1,(now-t0)/dur);render();if(cur.t<1)requestAnimationFrame(step);})(t0);}
+    var auto=true,timer;
+    function loop(){timer=setTimeout(function(){if(!auto)return;go((cur.i+1)%3);loop();},cur.i==2?4200:3400);}
+    document.querySelectorAll(".ph").forEach(function(b){b.onclick=function(){auto=false;clearTimeout(timer);go(+b.dataset.i);};});
+    document.getElementById("phaseCap").textContent=CAP[0]; render(); if(!reduce) loop();
+    new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  })();
 
   /* スクロールで出す */
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on"); if(e.target.dataset.run) window[e.target.dataset.run](); io.unobserve(e.target);}});},{threshold:.25});
