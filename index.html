@@ -72,14 +72,14 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
 <header class="hero">
   <canvas id="lattice"></canvas>
   <div class="wrap">
-    <span class="tag">2026-11-18 時点の進め方</span>
+    <span class="tag">2026-11-19 時点の進め方</span>
     <h1>有機カチオンで<br>黒い CsPbI₃ を守る</h1>
     <p>CsPbI₃ は、太陽電池に使える黒い相（γ・α）から、使えない黄色い相（δ）へ変わりやすい。表面に置く有機カチオンで黒い相を安定にできるかを、機械学習ポテンシャル（MLIP）で広く探し、DFT で確かめる。</p>
   </div>
 </header>
 
 <nav class="toc"><div class="wrap">
-  <a href="#metric">1. 指標</a><a href="#repro">2. 論文の再現</a><a href="#exp">2.5 実験の裏付け</a><a href="#check">3. MLIP の検証</a><a href="#screen">4. 候補探索</a><a href="#insight">5. わかったこと</a><a href="#wall">5.5 物差しの壁</a><a href="#model">5.6 選び方</a><a href="#next">6. これから</a>
+  <a href="#metric">1. 指標</a><a href="#repro">2. 論文の再現</a><a href="#exp">2.5 実験の裏付け</a><a href="#check">3. MLIP の検証</a><a href="#screen">4. 候補探索</a><a href="#insight">5. わかったこと</a><a href="#wall">5.5 物差しの壁</a><a href="#model">5.6 選び方</a><a href="#tilt">5.7 傾きと湿気</a><a href="#next">6. これから</a>
 </div></nav>
 
 <section id="metric"><div class="wrap">
@@ -318,7 +318,7 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
         <tr><td>1 価（アニリニウム・MA）</td><td>約 0</td><td>約 0</td></tr>
       </tbody>
     </table>
-    <p class="note">PFP なら「PPD は 1 価より γ 寄り」で実験と同じ向きになる。どちらが正しいかを QE（DFT）で判定している。D3 を zero に差し替えても、候補どうしの比較はほとんど変わらなかった（PPD の ΔΔγ は +16.78 → +16.74）。</p>
+    <p class="note">QE（DFT、PBE＋D3）で判定すると、PPD は +0.51 eV、アニリニウムは +0.06 eV で、UMA と同じ向きだった。表面エネルギーの差（Δr）では、実験の「PPD は効き、アニリニウムは効かない」を再現できない。これは計算手法の問題ではなく、物差しの限界である。D3 を zero に差し替えても、候補どうしの比較はほとんど変わらなかった（PPD の ΔΔγ は +16.78 → +16.74）。</p>
   </div>
 </div></section>
 
@@ -335,12 +335,53 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
     <table>
       <thead><tr><th>物差し</th><th>何を見るか</th><th>期待する結果</th><th>状況</th></tr></thead>
       <tbody>
-        <tr><td>水の吸着</td><td>表面に水がどれだけ強く付くか</td><td>PPD の表面だけ弱い</td><td><span class="pill y">計算中</span></td></tr>
-        <tr><td>八面体の傾きにくさ</td><td>表面の八面体を傾けたときのエネルギーの上がり方</td><td>PPD だけ硬い</td><td><span class="pill y">計算中</span></td></tr>
+        <tr><td>水の吸着</td><td>表面に水がどれだけ強く付くか</td><td>PPD の表面だけ弱い</td><td><span class="pill b">差が出ず</span></td></tr>
+        <tr><td>八面体の傾きにくさ</td><td>表面の八面体を傾けたときのエネルギーの上がり方</td><td>アニリニウムだけ傾きやすい</td><td><span class="pill g">実験と同じ向き</span></td></tr>
         <tr><td>2 点止めの合い方</td><td>2 つの NH₃⁺ の間隔と、表面の穴の間隔</td><td>黒い相にだけ合う</td><td><span class="pill b">これから</span></td></tr>
       </tbody>
     </table>
     <p class="note">PPD とアニリニウムで差が出た物差しだけを関門に使う。機械学習の重みは、実験の正解（効いた・効かなかった）が文献の 15〜20 分子ぶん集まってから決める。</p>
+  </div>
+</div></section>
+
+<section id="tilt"><div class="wrap">
+  <div class="kicker">STEP 5.7</div>
+  <h2>傾きやすさと湿気：アニリニウムだけが八面体を傾ける</h2>
+  <p class="lead">Ding らは、水が八面体の傾きを速め、PPD は 2 本の NH₃⁺ で Pb–I–Pb を 180° に保つと説明している。そこで、表面の八面体を傾けたときのエネルギーを、分子ごとに比べた。</p>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">測り方</h3>
+    <p>表面の骨格（Pb・I）を 6°・12° 傾けた位置に固定し、分子と Cs だけを緩和する。傾ける向きは面内・面の外・斜めの 3 通り。置き方を何通りも試し、置き方の飛び移りを傾きと取り違えないよう、逆向きの確認もした。エネルギーが傾けないときより下がれば「谷」があり、その表面は傾きやすい。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">結果：谷の深さ（eV、負ほど傾きやすい）</h3>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th></th><th>乾いた状態（3 方向のうち最も深い谷）</th><th>水あり、12°（面内 / 面の外）</th></tr></thead>
+      <tbody>
+        <tr><td>アニリニウム</td><td class="neg">−0.16 〜 −0.25</td><td class="neg">−0.05 / −0.05</td></tr>
+        <tr><td>PPD</td><td>0 付近</td><td class="pos">+0.12 / +0.16</td></tr>
+        <tr><td>Cs（処理なし）</td><td>0 付近</td><td class="pos">+0.08 / +0.26</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">水ありは、表面の上下に水を約 21 分子ずつ乗せ、水の置き方 3 通りの平均。ばらつきは 0.01〜0.07 eV。水があると谷は浅くなるが、下がるのはアニリニウムだけという順番は変わらない。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">Δr だけで選ぶと外れる例</h3>
+    <p style="margin-bottom:0">2 価の候補で Δr が 1 位だった分子は、谷の深さが −0.33 eV で、アニリニウム並みに傾きやすかった（PPD は −0.03 eV）。そこで 2 価 132 種すべてに傾きのふるいをかけ、「Δr で PPD より有利、かつ傾きにくい」ものを残す。</p>
+  </div>
+
+  <div class="card reveal">
+    <h3 style="margin-top:0">進めている湿気の計算</h3>
+    <table>
+      <thead><tr><th>計算</th><th>何を見るか</th><th>状況</th></tr></thead>
+      <tbody>
+        <tr><td>はがれの自由エネルギー</td><td>水の中で表面のカチオン 1 個を引き上げ、はがれるまでの自由エネルギーの山の高さを測る（Cs・アニリニウム・PPD）</td><td><span class="pill y">計算中</span></td></tr>
+        <tr><td>水で挟んだ MD</td><td>スラブの両面を液体の水で挟み、430 K で、はがれたカチオン・I・Pb の数を時間を追って数える。FAPbI₃ の面と水を MLIP の MD で調べた先行研究（Bian ら 2025）の手順をなぞり、まず FAPbI₃ で同じ傾向が出るかを確かめる</td><td><span class="pill y">開始待ち</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note">表面処理の分子を乗せた CsPbI₃ の表面で、水による崩れを MLIP で比べた報告は見つかっていない。実験との照合は、同じ条件で比べた表面処理の唯一の組（Ding：PPD は効き、アニリニウムは効かない）で行う。</p>
   </div>
 </div></section>
 
@@ -350,15 +391,17 @@ footer{padding:40px 0;color:var(--muted);font-size:13px}
   <ol class="steps reveal">
     <li class="done"><b>論文（PPD）の再現</b><br><span class="note">D3 の減衰と δ の向きをそろえ、符号と順番が一致した。</span></li>
     <li class="done"><b>実験の対照で物差しを試す</b><br><span class="note">Ding のアニリニウム。表面エネルギーだけでは 1 価と 2 価を区別できないとわかった。</span></li>
-    <li class="now"><b>区別できる物差しを作る</b><br><span class="note">水の吸着、八面体の傾きにくさ。PPD とアニリニウムで試している。</span></li>
-    <li class="now"><b>368 種を比べる</b><br><span class="note">UMA（薄い被覆）と PFP（密な被覆は済み、薄い被覆はこれから）。</span></li>
-    <li><b>DFT で確かめる</b><br><span class="note">UMA と PFP で食い違う PPD の Δr を QE で判定。上位 10 個も QE で確かめる。</span></li>
+    <li class="done"><b>区別できる物差しを作る</b><br><span class="note">八面体の傾きやすさで、アニリニウムだけが傾きやすいとわかった（乾いた状態でも水があっても）。</span></li>
+    <li class="done"><b>PPD の Δr を DFT で判定</b><br><span class="note">QE は UMA と同じ向き。表面エネルギーでは実験を再現できないことが確定した。</span></li>
+    <li class="now"><b>湿気の中での崩れ方</b><br><span class="note">水の中ではがれる自由エネルギーと、水で挟んだ MD（先行研究の手順のトレース）。</span></li>
+    <li class="now"><b>2 価 132 種を傾きでふるう</b><br><span class="note">Δr で PPD より有利、かつ傾きにくいものを残す。</span></li>
+    <li><b>DFT で確かめる</b><br><span class="note">ふるいを通った上位を QE で確かめる。</span></li>
     <li><b>トラップ準位の判定</b><br><span class="note">元のパイプライン（α のスラブ、1 個置換、PDOS）で、性能を落とさないか。</span></li>
     <li><b>実験家向けの発表（2027 年 4 月ごろ）</b></li>
   </ol>
 </div></section>
 
-<footer><div class="wrap">計算：UMA（omat）＋ D3、QE 7.4（PBE＋D3、SSSP）。参考：González et al., ACS Appl. Mater. Interfaces 2024, 16, 39251。Ding et al., ACS Appl. Mater. Interfaces 2019, 11, 37720。Ke et al., Nat. Commun. 2018, 9, 4785。</div></footer>
+<footer><div class="wrap">計算：UMA（omat）＋ D3、QE 7.4（PBE＋D3、SSSP）。参考：González et al., ACS Appl. Mater. Interfaces 2024, 16, 39251。Ding et al., ACS Appl. Mater. Interfaces 2019, 11, 37720。Ke et al., Nat. Commun. 2018, 9, 4785。Bian et al., Chem. Mater. 2025, 37, 5099。</div></footer>
 
 <script>
 (function(){
